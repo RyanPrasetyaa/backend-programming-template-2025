@@ -191,6 +191,31 @@ async function deleteUser(request, response, next) {
   }
 }
 
+async function loginUser(request, response, next) {
+  try {
+    const { email, password } = request.body;
+
+    if (!email || !password) {
+      throw errorResponder(errorTypes.VALIDATION_ERROR, 'Email and password are required');
+    }
+
+    const user = await usersService.getUserByEmail(email);
+    if (!user) {
+      throw errorResponder(errorTypes.UNAUTHORIZED, 'User not found');
+    }
+
+    const isMatch = await passwordMatched(password, user.password);
+    if (!isMatch) {
+      return response.status(403).json({ error: 'INVALID_PASSWORD' });
+    }
+
+    return response.status(200).json({ message: 'Login successful' });
+
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
   getUsers,
   getUser,
@@ -198,4 +223,5 @@ module.exports = {
   updateUser,
   changePassword,
   deleteUser,
+  loginUser,
 };
